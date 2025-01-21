@@ -1,0 +1,3 @@
+<div>
+    {{$curso->id}}
+</div>

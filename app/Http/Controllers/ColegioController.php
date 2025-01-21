@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ColegioRequest;
+use App\Http\Requests\ColegioUpdateRequest;
 use App\Models\Colegio;
+use App\Models\Gestion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ColegioController extends Controller
 {
@@ -43,15 +46,24 @@ class ColegioController extends Controller
      */
     public function store(ColegioRequest $request):RedirectResponse
     {
-        // $validated = $request->validate([
-        //     'nombre' => 'required|string|max:255',
-        //     'direccion' => 'required|string|max:255',
-        //     'campo' => 'required|string|max:255',
-        // ]);
+        // dd($request);
+        DB::beginTransaction();
+        try {
+            $colegio = Colegio::create($request->validated());
+            //dd($colegio);
+            
+            Gestion::create([
+                'dato' => $request->input('gestion'),
+                'id_colegio'=> $colegio->id
+            ]);            
 
-        Colegio::create($request->validated());
-
-        return redirect()->route('colegio.index')->with('success', 'Colegio creado exitosamente.');
+            DB::commit();
+            return redirect()->route('colegio.index')->with('success', 'Colegio creado exitosamente.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back()->withErrors('Hubo un error al crear el colegio y la gestión.');
+        }
+ 
     }
 
     /**
@@ -60,9 +72,20 @@ class ColegioController extends Controller
      * @param  \App\Models\Colegio  $colegio
      * @return \Illuminate\Http\Response
      */
-    public function show(Colegio $colegio):void
+    public function show(Colegio $colegio)
     {
-        //
+       //dd($colegio);
+       try {
+        $gestiones = Gestion::where('id_colegio',$colegio->id)->get();
+        $colegio = Colegio::findOrFail($colegio->id);
+
+        //dd($gestiones);
+        return view('colegio.colegioShow',[
+            'gestiones'=> $gestiones,
+            'colegio'=>$colegio]);
+    } catch (\Throwable $th) {
+        //throw $th;
+    }
     }
 
     /**
@@ -74,8 +97,11 @@ class ColegioController extends Controller
     public function edit(Colegio $colegio)
     {
         try {
-            
-            return view('colegio.update',['colegio'=>$colegio]);
+            $gestion = Gestion::where('id_colegio',$colegio->id)->get();
+            return view('colegio.update',[
+                'colegio'=>$colegio,
+                'gestiones' => $gestion
+            ]);
         } catch (\Throwable $th) {
             //dd($th->getMessage());
         }
@@ -88,7 +114,7 @@ class ColegioController extends Controller
      * @param  \App\Models\Colegio  $colegio
      * @return \Illuminate\Http\Response
      */
-    public function update(ColegioRequest $request, Colegio $colegio):RedirectResponse
+    public function update(ColegioUpdateRequest $request, Colegio $colegio):RedirectResponse
     {
         try {
             // Validar los datos de entrada
@@ -97,7 +123,6 @@ class ColegioController extends Controller
             //     'direccion' => 'required|string|max:255',
             //     'campo' => 'required|string|max:255',
             // ]);
-    
             // Actualizar los datos del colegio
             $colegio->update($request->validated());
     

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Colegio;
 use App\Models\Gestion;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class GestionController extends Controller
@@ -36,7 +37,29 @@ class GestionController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate(
+            [
+                'dato' => 'required|string|max:25',
+                'id_colegio' => 'required|exists:colegio,id',
+            ],
+            [
+                'dato.required' => 'El campo Gestion es obligatorio.',
+                'dato.string' => 'El campo Gestion debe ser un texto válido.',
+                'dato.max' => 'El campo Gestion no puede tener más de 25 caracteres.',
+                //'dato.unique' => 'El valor del campo Gestion ya existe para este colegio.',
+                'id_colegio.required' => 'El campo "id_colegio" es obligatorio.',
+                'id_colegio.exists' => 'El colegio seleccionado no existe en la base de datos.',
+            ]
+
+        );
+
+        Gestion::create([
+            'dato' => $data['dato'],
+            'id_colegio' => $data['id_colegio']
+        ]);
+
+
+        return redirect()->back();
     }
 
     /**
@@ -45,16 +68,15 @@ class GestionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Gestion $gestion)
     {
         try {
-            $gestiones = Gestion::where('id_colegio',$id)->get();
-            $colegio = Colegio::findOrFail($id);
+            $cursos = $gestion->cursos;    
+            // $gestiones = Gestion::where('id_colegio',$id)->get();
+            // $colegio = Colegio::findOrFail($id);
 
             //dd($gestiones);
-            return view('gestion.index',[
-                'gestiones'=> $gestiones,
-                'colegio'=>$colegio]);
+            return view('gestion.gestionShow',['cursos'=>$cursos, 'gestion' => $gestion]);
         } catch (\Throwable $th) {
             //throw $th;
         }
@@ -67,9 +89,9 @@ class GestionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Gestion $gestion):View
     {
-        //
+        return view('gestion.gestionUpdate',['gestion'=> $gestion]);
     }
 
     /**
@@ -79,9 +101,12 @@ class GestionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Gestion $gestion)
     {
-        //
+        $gestion->update([
+            'dato' => $request['dato']
+        ]);
+        return redirect()->route('colegio.edit',$gestion->id_colegio);
     }
 
     /**
@@ -92,6 +117,12 @@ class GestionController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+            $gestion = Gestion::findOrFail($id);
+            $gestion->delete();
+            return redirect()->back();
+        } catch (\Throwable $th) {
+            dd($th);
+        }
     }
 }

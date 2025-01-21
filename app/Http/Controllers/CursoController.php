@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Curso;
+use App\Models\Persona;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class CursoController extends Controller
@@ -34,7 +37,25 @@ class CursoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $datos = $request->validate([
+            'nombre' => 'required|max:50',
+            'paralelo' => 'required|max:50',
+            'campo' => 'max:50',
+            'idGestion' => ''
+        ],[
+            'nombre.required' => 'El nombre del curso es requerido',
+            'nombre.max' => 'El nombre del curso tiene que ser solo de 50 letras',
+            'paralelo.required' => 'El nombre del paralelo es requerido',
+            'paralelo.max' => 'El nombre del paralelo tiene que ser solo de 50 letras',
+        ]);
+
+        Curso::create([
+            'nombre' => $datos['nombre'],
+            'paralelo' => $datos['paralelo'],
+            'campo' => $datos['campo'],
+            'id_gestion' => $datos['idGestion']
+        ]);
+        return redirect()->back();
     }
 
     /**
@@ -43,9 +64,15 @@ class CursoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Curso $curso):View
     {
-        //
+        $personas = Persona::where('id_curso',$curso->id)->get();
+
+        //dd($personas);
+        return view('curso.cursoShow',[
+            'personas'=> $personas,
+            'curso' => $curso
+        ]);
     }
 
     /**
@@ -54,7 +81,7 @@ class CursoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Curso $curso)
     {
         //
     }
@@ -66,7 +93,7 @@ class CursoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Curso $curso)
     {
         //
     }
@@ -77,8 +104,9 @@ class CursoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Curso $curso)
     {
-        //
+        $curso->delete();
+        return redirect()->back();
     }
 }

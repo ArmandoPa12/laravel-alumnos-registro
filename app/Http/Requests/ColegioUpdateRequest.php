@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule as ValidationRule;
 
-class ColegioRequest extends FormRequest
+class ColegioUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,21 +23,13 @@ class ColegioRequest extends FormRequest
      */
     public function rules()
     {
-        
         return [
-            'nombre' => 'required|string|max:255|unique:colegio,nombre',
+            'nombre' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
-            'campo' => 'string|max:255',
-            'gestion' => [  
-                'required',
-                'string',
-                'max:255',
-                // ValidationRule::unique ('gestion', 'dato')->where(function ($query) {
-                //     return $query->where('id_colegio', $this->route('colegio'));
-                // }),
-            ],
+            'campo' => 'string|max:255|nullable',
         ];
     }
+
     public function messages()
     {
         // Mensajes personalizados para las validaciones.

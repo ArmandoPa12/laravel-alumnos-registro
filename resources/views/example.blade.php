@@ -19,10 +19,12 @@
 </html> --}}
 <x-layout>
   <x-slot:title>
-        Colegios
+        example
     </x-slot>
+    
+    
   @foreach ($datos as $dato)
-    {{$dato->dato}} | 
+    {{$dato->prenda }} | 
   @endforeach
 </x-layout>
 
